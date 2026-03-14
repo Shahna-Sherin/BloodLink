@@ -8,7 +8,11 @@ app = FastAPI(title="BloodLink API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://blood-link-xi.vercel.app",
+        "https://blood-link-qs4zwbrl6-shahna-sherins-projects.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
