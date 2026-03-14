@@ -1,0 +1,25 @@
+# Environment files
+backend/.env
+frontend/.env
+
+# Virtual environment
+backend/venv/
+
+# Python cache
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Node modules
+**/node_modules/
+
+# Build files
+frontend/dist/
+
+# Test files
+backend/test_*.py
+backend/test_http.py
+backend/test_email.py
+
+# ML model
+backend/ml_model/*.pkl
