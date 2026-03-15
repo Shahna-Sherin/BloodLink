@@ -7,10 +7,20 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv(), override=True)
 
 GMAIL_USER = os.getenv("GMAIL_USER", "bloodlink26@gmail.com")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "emwg qsnq fisu khhy")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+
+print(f"EMAIL CONFIG: user={GMAIL_USER}, password_set={GMAIL_APP_PASSWORD is not None}")
 
 def send_donor_request_email(donor_name, donor_email, requester_name, requester_contact, blood_group, location, message=""):
     try:
+        print(f"Attempting to send email to {donor_email}")
+        print(f"Using Gmail user: {GMAIL_USER}")
+        print(f"Password available: {GMAIL_APP_PASSWORD is not None}")
+
+        if not GMAIL_APP_PASSWORD:
+            print("ERROR: GMAIL_APP_PASSWORD is not set!")
+            return False
+
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"Urgent Blood Donation Request - {blood_group}"
         msg["From"] = GMAIL_USER
@@ -67,13 +77,23 @@ def send_donor_request_email(donor_name, donor_email, requester_name, requester_
 
         msg.attach(MIMEText(html, "html"))
 
+        print(f"Connecting to Gmail SMTP...")
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            print(f"Logging in...")
             server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            print(f"Sending email...")
             server.sendmail(GMAIL_USER, donor_email, msg.as_string())
 
-        print(f"Email sent to {donor_email}")
+        print(f"Email sent successfully to {donor_email}")
         return True
 
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"SMTP Authentication Error: {e}")
+        print("Gmail App Password may be invalid or expired!")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"SMTP Error: {e}")
+        return False
     except Exception as e:
-        print(f"Email failed: {e}")
+        print(f"Email failed with error: {type(e).__name__}: {e}")
         return False
