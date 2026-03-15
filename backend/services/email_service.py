@@ -14,8 +14,6 @@ print(f"EMAIL CONFIG: user={GMAIL_USER}, password_set={GMAIL_APP_PASSWORD is not
 def send_donor_request_email(donor_name, donor_email, requester_name, requester_contact, blood_group, location, message=""):
     try:
         print(f"Attempting to send email to {donor_email}")
-        print(f"Using Gmail user: {GMAIL_USER}")
-        print(f"Password available: {GMAIL_APP_PASSWORD is not None}")
 
         if not GMAIL_APP_PASSWORD:
             print("ERROR: GMAIL_APP_PASSWORD is not set!")
@@ -77,11 +75,11 @@ def send_donor_request_email(donor_name, donor_email, requester_name, requester_
 
         msg.attach(MIMEText(html, "html"))
 
-        print(f"Connecting to Gmail SMTP...")
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            print(f"Logging in...")
+        print(f"Connecting to Gmail SMTP port 587...")
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.ehlo()
+            server.starttls()
             server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            print(f"Sending email...")
             server.sendmail(GMAIL_USER, donor_email, msg.as_string())
 
         print(f"Email sent successfully to {donor_email}")
