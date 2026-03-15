@@ -1,28 +1,18 @@
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import os
 from dotenv import load_dotenv, find_dotenv
+import sendgrid
+from sendgrid.helpers.mail import Mail, Email, To, Content
 
 load_dotenv(find_dotenv(), override=True)
 
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 GMAIL_USER = os.getenv("GMAIL_USER", "bloodlink26@gmail.com")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 
-print(f"EMAIL CONFIG: user={GMAIL_USER}, password_set={GMAIL_APP_PASSWORD is not None}")
+print(f"EMAIL CONFIG: sendgrid_set={SENDGRID_API_KEY is not None}")
 
 def send_donor_request_email(donor_name, donor_email, requester_name, requester_contact, blood_group, location, message=""):
     try:
         print(f"Attempting to send email to {donor_email}")
-
-        if not GMAIL_APP_PASSWORD:
-            print("ERROR: GMAIL_APP_PASSWORD is not set!")
-            return False
-
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"Urgent Blood Donation Request - {blood_group}"
-        msg["From"] = GMAIL_USER
-        msg["To"] = donor_email
 
         html = f"""
         <!DOCTYPE html>
@@ -73,25 +63,23 @@ def send_donor_request_email(donor_name, donor_email, requester_name, requester_
         </html>
         """
 
-        msg.attach(MIMEText(html, "html"))
+        sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
+        from_email = Email(GMAIL_USER)
+        to_email = To(donor_email)
+        subject = f"Urgent Blood Donation Request - {blood_group}"
+        content = Content("text/html", html)
+        mail = Mail(from_email, to_email, subject, content)
 
-        print(f"Connecting to Gmail SMTP port 587...")
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            server.sendmail(GMAIL_USER, donor_email, msg.as_string())
+        response = sg.client.mail.send.post(request_body=mail.get())
+        print(f"SendGrid response: {response.status_code}")
 
-        print(f"Email sent successfully to {donor_email}")
-        return True
+        if response.status_code in (200, 202):
+            print(f"Email sent successfully to {donor_email}")
+            return True
+        else:
+            print(f"SendGrid error: {response.status_code}")
+            return False
 
-    except smtplib.SMTPAuthenticationError as e:
-        print(f"SMTP Authentication Error: {e}")
-        print("Gmail App Password may be invalid or expired!")
-        return False
-    except smtplib.SMTPException as e:
-        print(f"SMTP Error: {e}")
-        return False
     except Exception as e:
         print(f"Email failed with error: {type(e).__name__}: {e}")
         return False
