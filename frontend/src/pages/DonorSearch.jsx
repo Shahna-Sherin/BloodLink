@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, MapPin, Star, Phone, RefreshCw, X } from 'lucide-react'
+import { Search, MapPin, Star, RefreshCw, X } from 'lucide-react'
 import client from '../api/client'
 
 const bloodTypes = ['All', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
@@ -23,8 +23,6 @@ function RequestModal({ donor, onClose }) {
     try {
       const res = await client.post('/donors/request-donor', {
         donor_name: donor.name,
-        donor_email: donor.email,
-        donor_contact: donor.contact,
         requester_name: form.requester_name,
         requester_contact: form.requester_contact,
         blood_group: donor.blood_group,
@@ -54,14 +52,12 @@ function RequestModal({ donor, onClose }) {
           </button>
         </div>
 
-        {/* Donor info */}
+        {/* Donor info - email and contact hidden for privacy */}
         <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900 rounded-xl p-4 mb-6">
           <div className="text-3xl font-bold text-red-500">{donor.blood_group}</div>
           <div>
             <p className="font-semibold text-gray-900 dark:text-white">{donor.name}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">{donor.current_locality}, {donor.place_of_residence}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{donor.email}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{donor.contact}</p>
           </div>
         </div>
 
@@ -280,9 +276,7 @@ export default function DonorSearch() {
                     <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                       <MapPin size={11} /> {donor.current_locality}, {donor.place_of_residence}
                     </span>
-                    <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                      <Phone size={11} /> {donor.contact}
-                    </span>
+                    {/* contact number removed for privacy */}
                   </div>
                   <div className="flex gap-3 mt-1">
                     <span className="text-xs text-gray-400">Age: {donor.age}</span>

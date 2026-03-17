@@ -10,8 +10,6 @@ router = APIRouter(prefix="/donors", tags=["Donors"])
 
 class DonationRequest(BaseModel):
     donor_name: str
-    donor_email: str
-    donor_contact: str
     requester_name: str
     requester_contact: str
     blood_group: str
@@ -35,7 +33,11 @@ async def register_donor(donor: DonorModel):
 @router.get("/")
 async def get_donors():
     donors = []
-    async for donor in donors_collection.find({}, {"_id": 0}):
+    async for donor in donors_collection.find({}, {
+        "_id": 0,
+        "email": 0,
+        "contact": 0
+    }):
         donors.append(donor)
     return rank_donors(donors)
 
@@ -54,15 +56,25 @@ async def predict_donors(blood_group: str = None):
 
 @router.post("/request-donor")
 async def request_donor(data: DonationRequest):
+    # Fetch donor contact details securely from DB
+    donor_record = await donors_collection.find_one(
+        {"name": data.donor_name},
+        {"_id": 0, "email": 1, "contact": 1}
+    )
+
+    if not donor_record:
+        return {"message": "❌ Donor not found in database"}
+
     success = send_donor_request_email(
         donor_name=data.donor_name,
-        donor_email=data.donor_email,
+        donor_email=donor_record["email"],
         requester_name=data.requester_name,
         requester_contact=data.requester_contact,
         blood_group=data.blood_group,
         location=data.location,
         message=data.message
     )
+
     if success:
         return {"message": f"✅ Request sent successfully to {data.donor_name}!"}
     else:
