@@ -56,7 +56,6 @@ async def predict_donors(blood_group: str = None):
 
 @router.post("/request-donor")
 async def request_donor(data: DonationRequest):
-    # Fetch donor contact details securely from DB
     donor_record = await donors_collection.find_one(
         {"name": data.donor_name},
         {"_id": 0, "email": 1, "contact": 1}
